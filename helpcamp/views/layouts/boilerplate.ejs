@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YelpCamp</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css"
+        integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I" crossorigin="anonymous">
+    <script crossorigin="anonymous"src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
+    
+    <script crossorigin="anonymous" src="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.umd.min.js"></script>
+    <link crossorigin="anonymous" href="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.css" rel="stylesheet">
+</head>
+
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+<body class="d-flex flex-column vh-100">
+    <%- include('../partials/navbar')%>
+    <main class="container mt-5">
+        <%- include('../partials/flash')%>
+        <%- body %>
+    </main>
+    <%- include('../partials/footer')%>
+    <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script crossorigin="anonymous" src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.min.js"
+        integrity="sha384-oesi62hOLfzrys4LxRF63OJCXdXDipiYWBnvTl9Y9/TRlw5xlKIEHpNyvvDShgf/"
+        crossorigin="anonymous"></script>
+
+  <script>
+    const MAPTILER_API_KEY = "<%= maptilerKey %>";
+    const locationInput = document.getElementById("location");
+    const suggestionBox = document.createElement("div");
+    suggestionBox.className = "list-group position-absolute w-100";
+    suggestionBox.style.zIndex = "1000";
+    locationInput.parentNode.appendChild(suggestionBox);
+
+    locationInput.addEventListener("input", async () => {
+        const query = locationInput.value.trim();
+        suggestionBox.innerHTML = "";
+
+        if (query.length === 0) return;
+
+        try {
+            const res = await axios.get(`https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json`, {
+                params: {
+                    key: MAPTILER_API_KEY,
+                    limit: 5,
+                }
+            });
+
+            const results = res.data.features;
+
+            results.forEach(place => {
+                const item = document.createElement("button");
+                item.type = "button";
+                item.className = "list-group-item list-group-item-action";
+                item.textContent = place.place_name;
+                item.onclick = () => {
+                    locationInput.value = place.place_name;
+                    suggestionBox.innerHTML = "";
+                };
+                suggestionBox.appendChild(item);
+            });
+        } catch (err) {
+            console.error("Error fetching locations:", err);
+        }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener("click", (e) => {
+        if (!locationInput.contains(e.target) && !suggestionBox.contains(e.target)) {
+            suggestionBox.innerHTML = "";
+        }
+    });
+</script>
+
+
+
+
+</body>
+
+</html>
